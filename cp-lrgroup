@@ -1,0 +1,14 @@
+#! /bin/bash
+# Usage:
+# cp-lrgroup [cp options] SRC DEST
+
+DEST="${*: -1:1}"
+SRC="${*: -2:1}"
+N_PARAM=$((${#*}-2))
+CP_PARAM="${*: 1:$N_PARAM}"
+
+echo DEST: $DEST
+echo SRC: $SRC
+echo number of parameters: $N_PARAM
+echo CP_PARAM: $CP_PARAM
+
