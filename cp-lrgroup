@@ -17,3 +17,14 @@ echo command executed:
 echo cp ${*}
 cp ${*}
 
+# change permissions
+if [ -d $DEST/$SRC ]
+then
+    chmod -R g=rX $DEST/$SRC
+    # set the permissions so that group members can create
+    # new files in the directory but not delete or overwrite
+    # existing files
+    find $DEST/$SRC -type d -exec chmod g+w {} \;
+else
+    chmod g=rX $DEST/$SRC
+fi
