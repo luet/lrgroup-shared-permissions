@@ -12,3 +12,8 @@ echo SRC: $SRC
 echo number of parameters: $N_PARAM
 echo CP_PARAM: $CP_PARAM
 
+# copy
+echo command executed:
+echo cp ${*}
+cp ${*}
+
