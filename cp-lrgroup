@@ -1,30 +1,42 @@
 #! /bin/bash
 # Usage:
 # cp-lrgroup [cp options] SRC DEST
+# TODO:
+#   - test with cp-laure *.pdf pdf-dir
+#   - Do I really need the "-R"? Because if it's a directory, the user
+#     should specify it on their side. Maybe I should test of it?
+#     Initially, I didn't pass the command line parameters to the command line.
+
 
 DEST="${*: -1:1}"
-SRC="${*: -2:1}"
-N_PARAM=$((${#*}-2))
-CP_PARAM="${*: 1:$N_PARAM}"
+SRC="${*/$DEST}"
 
-echo DEST: $DEST
-echo SRC: $SRC
-echo number of parameters: $N_PARAM
-echo CP_PARAM: $CP_PARAM
+echo array:
+for a in ${*}
+do
+    echo \#$a\#
+done
+
+echo DEST: \#"${DEST}"\#
+echo SRC: \#"${SRC}"\#
 
 # copy
 echo command executed:
-echo cp ${*}
-cp ${*}
+echo cp -R "${*}"
+cp -R "${SRC}" "${DEST}"
 
 # change permissions
-if [ -d $DEST/$SRC ]
-then
-    chmod -R g=rX $DEST/$SRC
-    # set the permissions so that group members can create
-    # new files in the directory but not delete or overwrite
-    # existing files
-    find $DEST/$SRC -type d -exec chmod g+w {} \;
-else
-    chmod g=rX $DEST/$SRC
-fi
+for s in "${SRC}"
+do
+    echo $s
+    if [ -d "${DEST}"/$s ]
+    then
+	chmod -R g=rX "${DEST}"/"${SRC}"
+	# set the permissions so that group members can create
+	# new files in the directory but not delete or overwrite
+	# existing files
+	find "${DEST}"/"${SRC}" -type d -exec chmod g+w {} \;
+    else
+	chmod g=rX "${DEST}"/"${SRC}"
+    fi
+done
