@@ -8,12 +8,62 @@
 #     Initially, I didn't pass the command line parameters to the command line.
 # set -x
 
-# set default
-source_dir="."
-action="cp"
+help()
+{
+    cat << EOF
+usage: cp-lrgroup [ -s | --source ]
+       [ -d | --destination ]
+       [ -r | --remove ]
+       [ -h | --help ]
 
-TEMP=`getopt -o f:s:d:a: \
-	      --long file-name:,source:,destination:,action: \
+where:
+  -s: specifies the source. This can be a directory, a list of files,
+   or a pattern (e.g. "*.nc").
+  -d: specifies the destination directory.
+  -r: specifying "-r" will remove the files and directories that have
+   been transferred. The default (without specifying "-r") is to leave
+   the source files in place.
+
+The purpose of this script is to transfer files and directories to a
+shared directory and to automatically set the permissions so that
+members of the group:
+- can read existing files, but not delete or overwrite them,
+- can create new files in the directories and sub-directories that
+  have been transferred.
+
+This script uses rsync to copy the data and uses the same
+syntax. Specifically, be aware of trailing slashes (/) in
+the name of a source directory. For instance:
+   cp-lrgroup source-dir /projects/GEOCLIM/LRGROUP/
+will copy the directory source-dir resulting in the directory
+   /projects/GEOCLIM/LRGROUP/source-dir
+but (note the trailing /)
+   cp-lrgroup source-dir/ /projects/GEOCLIM/LRGROUP/
+will copy the *content* of the directory source-dir
+in /projects/GEOCLIM/LRGROUP/.
+
+examples:
+- copy the directory mydir in the directory /projects/GEOCLIM/LRGROUP/
+    cp-lrgroup mydir /projects/GEOCLIM/LRGROUP/
+- copy "*.nc" in in the directory /projects/GEOCLIM/LRGROUP/all-my-nc
+    cp-lrgroup *.nc /projects/GEOCLIM/LRGROUP/all-my-nc
+
+This script uses rsync to copy the source to the destination. rsync
+does not delete the source directory. You will be prompted to delete
+it at the end of this script.
+
+EOF
+exit 2
+}
+
+
+# set default
+action="rsync"
+source="xnosourcex"
+destination="xnodestinationx"
+
+TEMP=`getopt -o s:d:a: \
+	      --long source::,destination::,action: \
 	      -n 'cp-lrgroup' -- "$@"`
 
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
@@ -23,15 +73,13 @@ eval set -- "$TEMP"
 # extract options and their arguments into variables.
 while true ; do
     case "$1" in
-  	-f|--file-name)
-  	    file_name=$2 ; echo "file_name: $file_name"; shift 2 ;;
   	-s|--source)
-	    source_dir=$2; echo "source_dir: $source_dir" ; shift 2 ;;
+	    source=$2; echo "source: $source" ; shift 2 ;;
   	-d|--destination)
-  	    destination_dir=$2 ; echo "destination_dir: $destination_dir"; shift 2;;
+  	    destination=$2 ; echo "destination: $destination"; shift 2;;
   	-a|--action)
   	    case "$2" in
-  		"cp"|"mv") action=$2 ; echo "action: $action"; shift 2 ;;
+  		"cp"|"mv"|"rsync") action=$2 ; echo "action: $action"; shift 2 ;;
   		*) echo "action $2 unknown"; shift ;exit 1 ;;
   	    esac ;;
   	--) shift ; break ;;
@@ -40,7 +88,7 @@ while true ; do
 done
   
 # Now take action
-echo "$action file $file_name from $source_dir to $destination_dir"
+echo "$action $source to $destination"
 
 exit 1
       
