@@ -6,6 +6,44 @@
 #   - Do I really need the "-R"? Because if it's a directory, the user
 #     should specify it on their side. Maybe I should test of it?
 #     Initially, I didn't pass the command line parameters to the command line.
+# set -x
+
+# set default
+source_dir="."
+action="cp"
+
+TEMP=`getopt -o f:s:d:a: \
+	      --long file-name:,source:,destination:,action: \
+	      -n 'cp-lrgroup' -- "$@"`
+
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+eval set -- "$TEMP"
+
+# extract options and their arguments into variables.
+while true ; do
+    case "$1" in
+  	-f|--file-name)
+  	    file_name=$2 ; echo "file_name: $file_name"; shift 2 ;;
+  	-s|--source)
+	    source_dir=$2; echo "source_dir: $source_dir" ; shift 2 ;;
+  	-d|--destination)
+  	    destination_dir=$2 ; echo "destination_dir: $destination_dir"; shift 2;;
+  	-a|--action)
+  	    case "$2" in
+  		"cp"|"mv") action=$2 ; echo "action: $action"; shift 2 ;;
+  		*) echo "action $2 unknown"; shift ;exit 1 ;;
+  	    esac ;;
+  	--) shift ; break ;;
+  	*) echo "Internal error!" ; exit 1 ;;
+    esac
+done
+  
+# Now take action
+echo "$action file $file_name from $source_dir to $destination_dir"
+
+exit 1
+      
 
 
 DEST="${*: -1:1}"
