@@ -13,7 +13,7 @@ help()
     cat << EOF
 usage: cp-lrgroup [ -s | --source ]
        [ -d | --destination ]
-       [ -r | --remove ]
+       [ -r | --remove-source ]
        [ -h | --help ]
 
 where:
@@ -61,9 +61,11 @@ exit 2
 action="rsync"
 source="xnosourcex"
 destination="xnodestinationx"
+remove=1
+RSYNC="rsync -avu"
 
-TEMP=`getopt -o s:d:a: \
-	      --long source::,destination::,action: \
+TEMP=`getopt -o hs:d:r \
+	      -l help,source:,destination:,remove-source \
 	      -n 'cp-lrgroup' -- "$@"`
 
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
@@ -77,39 +79,27 @@ while true ; do
 	    source=$2; echo "source: $source" ; shift 2 ;;
   	-d|--destination)
   	    destination=$2 ; echo "destination: $destination"; shift 2;;
-  	-a|--action)
-  	    case "$2" in
-  		"cp"|"mv"|"rsync") action=$2 ; echo "action: $action"; shift 2 ;;
-  		*) echo "action $2 unknown"; shift ;exit 1 ;;
-  	    esac ;;
+  	-r|--remove-source)
+  	    remove=0 ; echo "remove: $remove"; shift;;
+	-h | --help) help ;;	
   	--) shift ; break ;;
   	*) echo "Internal error!" ; exit 1 ;;
     esac
 done
   
 # Now take action
-echo "$action $source to $destination"
+echo $RSYNC "${source}" "${destination}"
+
+(($? != 0)) && { printf '%s\n' "rsync command ended with non-zero status"; exit 1; }
+
+if [ $remove -eq 0 ]
+then
+    echo removing source files and directories
+else
+    echo leaving files and directories in place
+fi
 
 exit 1
-      
-
-
-DEST="${*: -1:1}"
-SRC="${*/$DEST}"
-
-echo array:
-for a in ${*}
-do
-    echo \#$a\#
-done
-
-echo DEST: \#"${DEST}"\#
-echo SRC: \#"${SRC}"\#
-
-# copy
-echo command executed:
-echo cp -R "${*}"
-cp -R "${SRC}" "${DEST}"
 
 # change permissions
 for s in "${SRC}"
